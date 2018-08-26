@@ -5,13 +5,20 @@
    <extension
          point="org.eclipse.ui.commands">
       <category
-            name="サンプル・カテゴリー"
-            id="hoge.commands.category">
+            description="hnet hoge plug-in"
+            id="hoge.commands.category"
+            name="HogeCategory">
       </category>
       <command
-            name="サンプル・コマンド"
             categoryId="hoge.commands.category"
-            id="hoge.commands.sampleCommand">
+            description="OpenAllMethods"
+            id="hoge.commands.sampleCommand"
+            name="HogeCommand">
+            
+	   <state
+	         class="org.eclipse.ui.handlers.RegistryToggleState:false"
+	         id="org.eclipse.ui.commands.toggleState">
+	   </state>
       </command>
    </extension>
    <extension
@@ -19,6 +26,11 @@
       <handler
             commandId="hoge.commands.sampleCommand"
             class="hoge.handlers.SampleHandler">
+            <activeWhen>
+			    <with variable="activeEditor">
+			       <not><equals value="java.lang.Object"/></not>
+			    </with>
+            </activeWhen>
       </handler>
    </extension>
    <extension
@@ -35,13 +47,14 @@
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               label="サンプル・メニュー"
+               label="HogeTools"
                mnemonic="M"
                id="hoge.menus.sampleMenu">
             <command
                   commandId="hoge.commands.sampleCommand"
                   mnemonic="S"
-                  id="hoge.menus.sampleCommand">
+                  id="hoge.menus.sampleCommand"
+                  style="toggle">
             </command>
          </menu>
       </menuContribution>
@@ -51,12 +64,23 @@
                id="hoge.toolbars.sampleToolbar">
             <command
                   commandId="hoge.commands.sampleCommand"
-                  icon="icons/sample.png"
-                  tooltip="Say hello world"
-                  id="hoge.toolbars.sampleCommand">
+                  icon="icons/enable.png"
+                  id="hoge.toolbars.sampleCommand"
+                  label="hoge.commands.sampleCommand"
+                  tooltip="Open all methods"
+                  style="toggle">
             </command>
          </toolbar>
       </menuContribution>
+      
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.compilationParticipant">
+      <compilationParticipant
+            class="hoge.handlers.BuildHook"
+            id="hoge.handlers.BuildHook"
+            requiredSourceLevel="1.5">
+      </compilationParticipant>
    </extension>
 
 </plugin>

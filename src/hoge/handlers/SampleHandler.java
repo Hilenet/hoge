@@ -1,13 +1,14 @@
 package hoge.handlers;
 
 import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.ui.wizards.datatransfer.ProjectConfigurator;
+import org.eclipse.ui.handlers.RegistryToggleState;
 
 import hoge.util.Tadikarao;
 
@@ -18,20 +19,54 @@ import hoge.util.Tadikarao;
  * @see org.eclipse.core.commands.AbstractHandler
  */
 public class SampleHandler extends AbstractHandler {
-	// クラスファイルに編集かける
-	// TODO: 可能ならばビルドでhook
-	// TODO: toggleに書き換え
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		System.out.println("[Start] plugin hoge start running");
-		Tadikarao tad = new Tadikarao();
-		boolean success = tad.expand();
-		System.out.println("[Finish] plugin hoge done\n");
+		IJavaProject iJavaProject = Tadikarao.getIJavaProject(Tadikarao.getActiveIProject());
+		if (iJavaProject == null) {
+			System.out.println("[ERR] no open project");
+			return false;
+		}
+		IWorkbench workbench = HandlerUtil.getActiveWorkbenchWindowChecked(event).getWorkbench();
+		Tadikarao tadikarao = Tadikarao.getInstace();
+		Boolean isActive = getCommandActiveStatus(workbench);
+		Boolean success = false;
+		if (isActive) {
+			// リセットしてoffに
+			success = tadikarao.reset(iJavaProject);
+			setCommandActiveStatus(workbench, false);
+		} else {
+			// expandしてonに
+			success = tadikarao.expand(iJavaProject);
+			setCommandActiveStatus(workbench, true);
+		}
+		System.out.println("[" + (isActive ? "DeActivation" : "Activation") + "] proc " + success);
+		// MessageDialog.openInformation(window.getShell(), "Hoge", "become: " +
+		// getCommandActiveStatus(workbench));
 		
-
-		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
-		MessageDialog.openInformation(window.getShell(), "Hoge", "Script " + success);
-
 		return null;
+	}
+
+	/**
+	 * Get command active status.
+	 * 
+	 * @param workbench target workbench
+	 * @return toggle activation status
+	 */
+	public static Boolean getCommandActiveStatus(IWorkbench workbench) {
+		ICommandService commandService = (ICommandService) workbench.getService(ICommandService.class);
+		Command command = commandService.getCommand(Tadikarao.COMMAND_ID);
+		return (Boolean) command.getState(RegistryToggleState.STATE_ID).getValue();
+	}
+
+	/**
+	 * Switch command active status(true/false).
+	 * 
+	 * @param workbench target workbench
+	 * @param status    setting status
+	 */
+	public static void setCommandActiveStatus(IWorkbench workbench, Boolean status) {
+		ICommandService commandService = (ICommandService) workbench.getService(ICommandService.class);
+		Command command = commandService.getCommand(Tadikarao.COMMAND_ID);
+		command.getState(RegistryToggleState.STATE_ID).setValue(status);
 	}
 }
