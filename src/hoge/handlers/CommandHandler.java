@@ -10,18 +10,20 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.handlers.RegistryToggleState;
 
-import hoge.util.Tadikarao;
+import hoge.core.Tadikarao;
+import hoge.util.EclipseUtil;
 
 /**
- * Our sample handler extends AbstractHandler, an IHandler base class.
+ * Corresponding to Eclipse Command(Menu command). Handles execution from
+ * menu-bar.
  * 
  * @see org.eclipse.core.commands.IHandler
  * @see org.eclipse.core.commands.AbstractHandler
  */
-public class SampleHandler extends AbstractHandler {
+public class CommandHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IJavaProject iJavaProject = Tadikarao.getIJavaProject(Tadikarao.getActiveIProject());
+		IJavaProject iJavaProject = EclipseUtil.getIJavaProject(EclipseUtil.getActiveIProject());
 		if (iJavaProject == null) {
 			System.out.println("[ERR] no open project");
 			return false;
@@ -39,10 +41,8 @@ public class SampleHandler extends AbstractHandler {
 			success = tadikarao.expand(iJavaProject);
 			setCommandActiveStatus(workbench, true);
 		}
-		System.out.println("[" + (isActive ? "DeActivation" : "Activation") + "] proc " + success);
-		// MessageDialog.openInformation(window.getShell(), "Hoge", "become: " +
-		// getCommandActiveStatus(workbench));
-		
+		System.out.println("[" + (isActive ? "" : "De") + "Activation" + "] proc " + success);
+
 		return null;
 	}
 
