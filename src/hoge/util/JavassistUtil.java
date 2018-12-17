@@ -1,9 +1,11 @@
 package hoge.util;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.eclipse.jdt.core.IType;
-
+import hoge.marker.MarkerInfo;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -11,41 +13,39 @@ import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.MethodInfo;
 
+/**
+ * Handles methods that relying with Javassist.
+ */
 public class JavassistUtil {
-
-	// クラス内全メソッドをこじ開ける
-	// TODO: interfaceからimplした場合の動作が不明
-	public static void openAllMethods(CtClass ctClass) {
-		for (MethodInfo mi : ctClass.getClassFile().getMethods()) {
-			// コンパイラがゴニョるのはこれくらいか
-			// 他に識別方法が提供されてないか
-			if (mi.getName().equals("<clinit>") || mi.getName().equals("<init>")) {
-				continue;
-			}
-
-			if (!AccessFlag.isPublic(mi.getAccessFlags())) {
-				mi.setAccessFlags(AccessFlag.PUBLIC);
-				System.out.println("[BecomePublic] " + ctClass.getName() + "#" + mi.getName());
-			}
-		}
-	}
-
 	/**
+	 * Expand given methods access scope in classfile.
+	 * 
 	 * @param binPath
-	 * @param iType
-	 * @return CtClass corresponding to IType or null
+	 * @param fqcn
+	 * @param markers
+	 * @return success status
 	 */
-	public static CtClass getCtClass(String binPath, IType iType) {
+	public static boolean openMethodsOfClass(String binPath, String fqcn, MarkerInfo[] markers) {
 		ClassPool classPool = new ClassPool();
-		CtClass ctClass;
+		List<String> markerInfos = Stream.of(markers).map(m -> m.toSignatureString()).collect(Collectors.toList());
+
 		try {
 			classPool.insertClassPath(binPath);
-			ctClass = classPool.getCtClass(iType.getFullyQualifiedName());
+			CtClass targetClass = classPool.getCtClass(fqcn);
+			List<MethodInfo> methodInfos = targetClass.getClassFile().getMethods();
+			for (MethodInfo methodInfo : methodInfos) {
+				String signature = methodInfo.toString();
+				if (markerInfos.contains(signature.substring(0, signature.indexOf(')') + 1))) {
+					methodInfo.setAccessFlags(AccessFlag.setPublic(methodInfo.getAccessFlags()));
+					System.out.println("[BecomePublic] " + fqcn + "." + methodInfo.toString());
+				}
+			}
+			updateCtClass(binPath, targetClass);
 		} catch (NotFoundException e) {
-			ctClass = null;
+			e.printStackTrace();
+			return false;
 		}
-
-		return ctClass;
+		return true;
 	}
 
 	/**

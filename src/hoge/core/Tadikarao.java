@@ -79,11 +79,13 @@ public class Tadikarao {
 		}
 		future = service.submit(new ExpandThread(javaProject));
 		boolean success = false;
+		System.out.println("[ExpandBuild] build start");
 		try {
 			success = future.get();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
+		System.out.println("[ExpandBuild] build fin");
 
 		future = null;
 
@@ -102,13 +104,13 @@ public class Tadikarao {
 		}
 		future = service.submit(new ResetThread(javaProject));
 		boolean success = false;
-		System.out.println("[rb] build start");
+		System.out.println("[ResetBuild] build start");
 		try {
 			success = future.get(10, TimeUnit.SECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			e.printStackTrace();
 		}
-		System.out.println("[rb] build fin");
+		System.out.println("[ResetBuild] build fin");
 
 		future = null;
 

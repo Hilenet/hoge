@@ -16,7 +16,6 @@ import org.eclipse.ui.PlatformUI;
 
 /**
  * Handles methods that relying with Eclipse IProject, IJavaProject.
- *
  */
 public class EclipseUtil {
 
